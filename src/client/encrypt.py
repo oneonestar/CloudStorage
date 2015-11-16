@@ -6,6 +6,11 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
 
 def encrypt_file(filename):
+    '''
+    Encrypt a file, store it into another file using random filename.
+    Using random genereated key and iv for encryption.
+    Return {original filename, random generate filename, key, iv, tag, cipher}
+    '''
     # Read file
     with open(filename, "rb") as f:
         try:
@@ -27,6 +32,10 @@ def encrypt_file(filename):
     return ret
 
 def decrypt_file(filename_ori, filename_rand, key, iv, tag):
+    '''
+    Decrypt a file.
+    Return the decrypted byte array.
+    '''
     ret = None
     # Read file
     with open(filename_rand, "rb") as f:
@@ -43,7 +52,7 @@ def decrypt_file(filename_ori, filename_rand, key, iv, tag):
 def encrypt_rand(plainText):
     """
     Encrypt byte data. Generate a random key, iv and filename for encryption.
-    Return (key, IV, tag, original filename, generated filename)
+    Return {key, iv, tag, cipher}
     """
 
     # Generate a random 96-bit IV
@@ -62,8 +71,11 @@ def encrypt_rand(plainText):
     return ret
 
 def encrypt(key, iv, plainText):
-    # Construct an AES-GCM Cipher object with the given key and a
-    # randomly generated IV.
+    '''
+    Encrypt data using key and iv.
+    Return cipher text and tag.
+    '''
+    # Construct an AES-GCM Cipher object with the given key and IV
     encryptor = Cipher(
         algorithms.AES(key),
         modes.GCM(iv),
@@ -71,10 +83,14 @@ def encrypt(key, iv, plainText):
     ).encryptor()
 
     cipherText = encryptor.update(plainText) + encryptor.finalize()
-
     return ({"cipher": cipherText, "tag":encryptor.tag})
 
+
 def decrypt(key, iv, tag, cipherText):
+    '''
+    Decrypt byte data using the given key, iv and tag.
+    Return decrypted byte data.
+    '''
     decryptor = Cipher(
         algorithms.AES(key),
         modes.GCM(iv, tag),
