@@ -4,8 +4,8 @@ List contains a list of user files with key, iv and tag.
 
 # External modules
 import pyscrypt
-import codecs
-import json
+import binascii
+import pickle
 import os
 
 # Internal modules
@@ -44,11 +44,8 @@ def encrypt_list(password, salt):
     """
     Encrypt the list in JSON form. Return the encrypted byte.
     """
-    mystr = {"array": []}
-    for key, value in mylist.items():
-        mystr["array"].append(value)
-    data = json.dumps(mystr)
-    return encrypt_data(password, salt, data.encode(encoding='UTF-8'))
+    data = pickle.dumps(mylist, pickle.HIGHEST_PROTOCOL)
+    return encrypt_data(password, salt, data)
 
 def save(password, salt, filename="list"):
     """
@@ -87,9 +84,7 @@ def load(password, salt, filename="list"):
     tag = data[12: 12+16]
     cipher = data[12+16:]
     ret = decrypt_data(password, salt, iv, tag, cipher)
-    ret = json.loads(ret.decode(encoding='UTF-8'))
-    for i in ret["array"]:
-        mylist[i['filename_rand']] = i
+    mylist = pickle.loads(ret)
 
 def encrypt_data(user_password, salt, data):
     """

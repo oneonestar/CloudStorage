@@ -21,7 +21,7 @@ def upload(filename_rand):
 
 def upload_file(filename_ori):
     """
-    Encrypt and upload the file, also add record in list.
+    Encrypt and upload the file using random filename, also add record in list.
     """
     # Encrypt the file
     data = None
