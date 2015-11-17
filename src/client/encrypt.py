@@ -13,7 +13,7 @@ import log
 
 #__all__ = 
 
-def encrypt_file(filename):
+def encrypt_file(filename_ori):
     '''
     Encrypt a file and store the ciphertext into another file.
 
@@ -29,11 +29,11 @@ def encrypt_file(filename):
     # Read file
     data = None
     try:
-        with open(filename, "rb") as f:
+        with open(filename_ori, "rb") as f:
             data = f.read()
     except Exception as e:
         log.print_exception(e)
-        log.print_error("IO error", "cannot open file '%s'" % (filename))
+        log.print_error("IO error", "cannot open file '%s'" % (filename_ori))
         raise
 
     # Encrypt using random key and iv
@@ -51,7 +51,7 @@ def encrypt_file(filename):
     
     # Store original filename and the generated filename
     ret.pop("cipher", None)
-    ret['filename'] = filename
+    ret['filename_ori'] = filename_ori
     ret['filename_rand'] = filename_rand
     return ret
 
@@ -191,6 +191,6 @@ if __name__ == "__main__":
     except:
         log.print_error("error", "failed to encrypt file")
     try:
-        decrypt_file(ret['filename']+".out", ret['filename_rand'], ret['key'], ret['iv'], ret['tag'])
+        decrypt_file(ret['filename_ori']+".out", ret['filename_rand'], ret['key'], ret['iv'], ret['tag'])
     except:
         log.print_error("error", "failed to decrypt file")

@@ -13,11 +13,12 @@ import encrypt
 
 __all__ = ["append", "save", "load"]
 
+# filename_ori is the key.
 mylist = {}
 
 def append(filename_ori, filename_rand, key, iv, tag):
     """
-    Append a new record into the list.
+    Append a new record into the list. filename_ori is the key.
     """
     list_record = {
         "filename_ori": filename_ori,
@@ -26,7 +27,7 @@ def append(filename_ori, filename_rand, key, iv, tag):
         "iv": iv,
         "tag": tag
     }
-    mylist[list_record['filename_rand']] = list_record
+    mylist[list_record['filename_ori']] = list_record
 
 def encrypt_list(password, salt):
     """
@@ -102,6 +103,9 @@ def decrypt_data(user_password, salt, iv, tag, data):
     return ret
 
 if __name__ == "__main__":
+    '''
+    For testing
+    '''
     append("ori1", "rand1", "key1", "iv1", "tag1")
     append("ori2", "rand2", "key2", "iv2", "tag2")
     save("Password1", "salt1")
