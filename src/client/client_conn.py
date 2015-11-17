@@ -43,3 +43,13 @@ def download_file(filename_ori, saveas=None):
         outputfile = saveas
     encrypt.decrypt_file(outputfile, record["filename_rand"],
                          record["key"], record["iv"], record["tag"])
+
+if __name__ == "__main__":
+    '''
+    For testing
+    '''
+    upload_file("testing.t")
+    upload_file("testing.txt")
+    upload_file("testing.txt")
+    filelist.listing()
+    download_file("testing.txt", "saveas.txt")
