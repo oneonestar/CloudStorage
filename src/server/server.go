@@ -14,7 +14,6 @@ type test_struct struct {
 }
 
 func client_upload(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(r.Form["filename"][0])
 	file, handler, err := r.FormFile("document")
 	if err != nil {
 		fmt.Println(err)
@@ -22,7 +21,7 @@ func client_upload(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 	fmt.Fprintf(w, "%v", handler.Header)
-	f, err := os.OpenFile("data/"+handler.Filename, os.O_WRONLY|os.O_CREATE, 0666)
+	f, err := os.OpenFile("data/"+r.URL.Path, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -34,18 +33,17 @@ func client_upload(w http.ResponseWriter, r *http.Request) {
 }
 
 func client_download(w http.ResponseWriter, r *http.Request) {
-	filename := r.Form["filename"][0]
-	fmt.Println(filename)
+	filename := r.URL.Path
 	http.ServeFile(w, r, "data/"+filename)
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	r.ParseMultipartForm(32 << 20)
-	cmd := r.Form["command"][0]
-	fmt.Println(cmd)
-	if cmd == "upload" {
+	fmt.Println(r.Method)
+	fmt.Println(r.URL)
+	if r.Method == "POST" {
 		client_upload(w, r)
-	} else if cmd == "download" {
+	} else if r.Method == "GET" {
 		client_download(w, r)
 	}
 	//fmt.Println(r)

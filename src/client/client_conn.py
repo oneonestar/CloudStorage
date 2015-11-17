@@ -4,7 +4,7 @@ import log
 import json
 import requests
 
-url = "https://localhost:8080"
+url = "https://localhost:8080/"
 cert = "../server/config/server.pem"
 #url = "https://blog.onestar.moe:8080"
 
@@ -12,10 +12,11 @@ def upload(filename_rand):
     """
     Upload the file to server.
     """
-    data = {'command':'upload', 'filename':filename_rand}
+    url2 = url+filename_rand
+    data = {'user':filename_rand}
     files = {'document': open(filename_rand, 'rb')}
     #r = requests.post(url, data=data, files=files, verify=True)
-    r = requests.post(url, data=data, files=files, verify=cert)
+    r = requests.post(url2, data=data, files=files, verify=cert)
     files['document'].close()
 
 def upload_file(filename_ori):
@@ -37,9 +38,10 @@ def upload_file(filename_ori):
     upload(data["filename_rand"])
 
 def download(filename_rand):
-    data = {'command':'download', 'filename':filename_rand}
-    #r = requests.post(url, data=data, verify=True)
-    r = requests.post(url, data=data, verify=cert)
+    url2 = url+filename_rand
+    payload = {'user':filename_rand}
+    #r = requests.get(url2, data=data, verify=True)
+    r = requests.get(url2, verify=cert)
     try:
         with open(filename_rand, "wb") as f:
             f.write(r.content)
