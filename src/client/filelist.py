@@ -11,10 +11,21 @@ import os
 # Internal modules
 import encrypt
 
-__all__ = ["append", "save", "load"]
+__all__ = ["append", "save", "load", "listing"]
 
 # filename_ori is the key.
 mylist = {}
+
+def listing():
+    """
+    Display the records in filelist.
+    """
+    for i, k in mylist.items():
+        print()
+        print(i)
+        import pprint
+        pp = pprint.PrettyPrinter(indent=4)
+        pp.pprint(k)
 
 def append(filename_ori, filename_rand, key, iv, tag):
     """
@@ -85,10 +96,8 @@ def encrypt_data(user_password, salt, data):
     Encrypt the data and store it in form of [IV,TAG,CIPHER].
     """
     key = pyscrypt.hash(password = user_password.encode(encoding='UTF-8'), salt = salt.encode(encoding='UTF-8'), N = 1024, r = 1, p = 1, dkLen = 32)
-    #print(codecs.encode(key, 'hex'))
     iv = os.urandom(12)
     ret = encrypt.encrypt(key, iv, data)
-    #print(b''.join([iv, ret["tag"], ret["cipher"]]))
     return b''.join([iv, ret["tag"], ret["cipher"]])
 
 def decrypt_data(user_password, salt, iv, tag, data):
@@ -98,7 +107,6 @@ def decrypt_data(user_password, salt, iv, tag, data):
     Raise exception when failed to decrypt file.
     """
     key = pyscrypt.hash(password = user_password.encode(encoding='UTF-8'), salt = salt.encode(encoding='UTF-8'), N = 1024, r = 1, p = 1, dkLen = 32)
-    #print(codecs.encode(key, 'hex'))
     ret = encrypt.decrypt(key, iv, tag, data)
     return ret
 
