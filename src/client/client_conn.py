@@ -4,7 +4,7 @@ import log
 import json
 import requests
 
-url = "http://localhost:8080"
+url = "https://localhost:8080"
 
 def upload(filename_rand):
     """
@@ -12,8 +12,10 @@ def upload(filename_rand):
     """
     data = {'command':'upload', 'filename':filename_rand}
     files = {'document': open(filename_rand, 'rb')}
-    requests.packages.urllib3.disable_warnings()
-    r = requests.post(url, data=data, files=files, verify=False)
+    #requests.packages.urllib3.disable_warnings()
+    #r = requests.post(url, data=data, files=files, verify=True)
+    r = requests.post(url, data=data, files=files, verify="/home/star/Documents/yr3/CloudStorage/src/server/server.pem")
+    #r = requests.post(url, data=data, files=files, verify=False)
 
 def upload_file(filename_ori):
     """
