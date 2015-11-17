@@ -14,7 +14,7 @@ type test_struct struct {
 }
 
 func client_upload(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(r.Form["filename"])
+	fmt.Println(r.Form["filename"][0])
 	file, handler, err := r.FormFile("document")
 	if err != nil {
 		fmt.Println(err)
@@ -22,7 +22,7 @@ func client_upload(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 	fmt.Fprintf(w, "%v", handler.Header)
-	f, err := os.OpenFile(handler.Filename, os.O_WRONLY|os.O_CREATE, 0666)
+	f, err := os.OpenFile("data/"+handler.Filename, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -36,7 +36,7 @@ func client_upload(w http.ResponseWriter, r *http.Request) {
 func client_download(w http.ResponseWriter, r *http.Request) {
 	filename := r.Form["filename"][0]
 	fmt.Println(filename)
-	http.ServeFile(w, r, filename)
+	http.ServeFile(w, r, "data/"+filename)
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -64,5 +64,5 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	http.HandleFunc("/", handler)
-	http.ListenAndServeTLS(":8080","server.pem", "server.key", nil)
+	http.ListenAndServeTLS(":8080","config/server.pem", "config/server.key", nil)
 }

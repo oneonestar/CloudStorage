@@ -76,7 +76,7 @@ def decrypt_file(filename_ori, filename_rand, key, iv, tag):
     # Decrypt
     try:
         ret = decrypt(key, iv, tag, data)
-    except:
+    except Exception as e:
         log.print_exception(e)
         log.print_error("error", "failed to decrypt message")
         raise

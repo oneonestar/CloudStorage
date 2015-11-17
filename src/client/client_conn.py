@@ -5,6 +5,8 @@ import json
 import requests
 
 url = "https://localhost:8080"
+cert = "../server/config/server.pem"
+#url = "https://blog.onestar.moe:8080"
 
 def upload(filename_rand):
     """
@@ -12,10 +14,9 @@ def upload(filename_rand):
     """
     data = {'command':'upload', 'filename':filename_rand}
     files = {'document': open(filename_rand, 'rb')}
-    #requests.packages.urllib3.disable_warnings()
     #r = requests.post(url, data=data, files=files, verify=True)
-    r = requests.post(url, data=data, files=files, verify="/home/star/Documents/yr3/CloudStorage/src/server/server.pem")
-    #r = requests.post(url, data=data, files=files, verify=False)
+    r = requests.post(url, data=data, files=files, verify=cert)
+    files['document'].close()
 
 def upload_file(filename_ori):
     """
@@ -37,8 +38,15 @@ def upload_file(filename_ori):
 
 def download(filename_rand):
     data = {'command':'download', 'filename':filename_rand}
-    requests.packages.urllib3.disable_warnings()
-    r = requests.post(url, data=data, verify=False)
+    #r = requests.post(url, data=data, verify=True)
+    r = requests.post(url, data=data, verify=cert)
+    try:
+        with open(filename_rand, "wb") as f:
+            f.write(r.content)
+    except Exception as e:
+        log.print_exception(e)
+        log.print_error("IO error", "cannot open file '%s'" % (filename_rand))
+        raise
 
 def download_file(filename_ori, saveas=None):
     """
@@ -55,14 +63,20 @@ def download_file(filename_ori, saveas=None):
         log.print_error("error", "file '%s' not in record" % (filename_ori))
         return
 
-    download(record["filename_rand"])
+    r = download(record["filename_rand"])
 
     if saveas == None:
         outputfile = filename_ori
     else:
         outputfile = saveas
-    encrypt.decrypt_file(outputfile, record["filename_rand"],
-                         record["key"], record["iv"], record["tag"])
+
+    # Try decryption
+    try:
+        encrypt.decrypt_file(outputfile, record["filename_rand"],
+                             record["key"], record["iv"], record["tag"])
+    except:
+        log.print_error("error", "failed to decrypt '%s'" % (filename_ori))
+        return
 
 if __name__ == "__main__":
     '''
@@ -70,6 +84,6 @@ if __name__ == "__main__":
     '''
     upload_file("testing.t")
     upload_file("testing.txt")
-    upload_file("testing.txt")
     filelist.listing()
+    _ = input()
     download_file("testing.txt", "saveas.txt")
