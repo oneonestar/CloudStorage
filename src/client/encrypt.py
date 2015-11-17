@@ -46,7 +46,8 @@ def encrypt_file(filename_ori):
             f.write(ret['cipher'])
     except Exception as e:
         log.print_exception(e)
-        log.print_error("IO error", "cannot write to file '%s'" % (filename_rand))
+        log.print_error("IO error", "cannot write to file '%s'"
+						% (filename_rand))
         raise
     
     # Store original filename and the generated filename
@@ -86,7 +87,8 @@ def decrypt_file(filename_ori, filename_rand, key, iv, tag):
             data = f.write(ret)
     except Exception as e:
         log.print_exception(e)
-        log.print_error("IO error", "cannot write to file '%s'" % (filename_rand))
+        log.print_error("IO error", "cannot write to file '%s'"
+						% (filename_rand))
         raise
 
 def encrypt_rand(plainText):
@@ -191,6 +193,7 @@ if __name__ == "__main__":
     except:
         log.print_error("error", "failed to encrypt file")
     try:
-        decrypt_file(ret['filename_ori']+".out", ret['filename_rand'], ret['key'], ret['iv'], ret['tag'])
+        decrypt_file(ret['filename_ori']+".out", ret['filename_rand'],
+					 ret['key'], ret['iv'], ret['tag'])
     except:
         log.print_error("error", "failed to decrypt file")
