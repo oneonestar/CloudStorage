@@ -217,3 +217,26 @@ func authenticate(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, string(ret2))
 	}
 }
+
+func logout(w http.ResponseWriter, r *http.Request) {
+	// Retrieve token from request
+	r.ParseForm()
+	token_arr, ok := r.Form["token"]
+	if !ok {
+		fmt.Println("FAILED to get token")
+		_client_upload_fail(w, r, "Invalid Token")
+		return
+	}
+	token := token_arr[0]
+	fmt.Println("Logout: ", token)
+
+	delete(token_db, token)
+	ret := &Response_create_account {
+		Status: true}
+	ret2, err := json.Marshal(ret)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Fprintf(w, string(ret2))
+	fmt.Println("Response: ", string(ret2))
+}

@@ -35,3 +35,7 @@ if __name__ == "__main__":
     client_conn.download(mylist)
     # Download a file
     client_conn.download_file("testing.txt", "saveas.txt")
+
+    # Logout
+    client_conn.logout()
+    #client_conn.download_file("testing.txt", "saveas.txt")

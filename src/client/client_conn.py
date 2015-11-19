@@ -8,12 +8,18 @@ base_url = None
 cert = None
 token = None
 
+##################################################################
+# Initial setup, such as setting the server and certificates
+##################################################################
 def setup(server_url, selfcert=None):
     global base_url
     global cert
     base_url = server_url
     cert = selfcert
 
+##################################################################
+# Registrate a new account
+##################################################################
 def registration(username, password):
     url = base_url + "registration"
     payload = {
@@ -35,6 +41,9 @@ def registration(username, password):
         print("Create ac failed")
 
 
+##################################################################
+# Login
+##################################################################
 def authenticate(username, password):
     url = base_url + "login"
     payload = {
@@ -65,6 +74,32 @@ def authenticate(username, password):
         log.print_error("authentication failure", "wrong username or password")
         return False
 
+##################################################################
+# Logout
+##################################################################
+def logout():
+    url = base_url + "logout"
+    data = {"token": token}
+    #r = requests.get(url, data=data, verify=True)
+    r = requests.get(url, params=data, verify=cert)
+    # Parse result
+    try:
+        response = json.loads(r.text)
+    except Exception as e:
+        log.print_exception(e)
+        log.print_error("logout failed", "failed to decode server message '%s'" % (r.text))
+        return False
+    if response.get("status", False):
+        # Logout successful
+        print("Logout successful")
+    else:
+        # Logout failure
+        log.print_error("logout failed", "failed to logout '%s'" % (r.text))
+
+
+##################################################################
+# Upload file
+##################################################################
 def upload(filename_rand):
     """
     Upload the file to server.
@@ -105,9 +140,15 @@ def upload_file(filename_ori):
     # Upload cipher text to server
     upload(data["filename_rand"])
 
+##################################################################
+# Download file
+##################################################################
 def download(filename_rand):
-    url = base_url+filename_rand
-    data = {'token': token}
+    url = base_url+"download"
+    data = {
+        'token': token,
+        'file': filename_rand
+    }
     #r = requests.get(url, data=data, verify=True)
     r = requests.get(url, params=data, verify=cert)
     try:

@@ -14,8 +14,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}*/
 	defer fmt.Println()
 	fmt.Println(r.RemoteAddr)
-	fmt.Println(r.Method)
-	fmt.Println(r.URL)
+	fmt.Println(r.Method, r.URL)
 	if r.Method == "POST" {
 		if r.URL.Path == "/login" {
 			authenticate(w, r)
@@ -25,7 +24,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			client_upload(w, r)
 		}
 	} else if r.Method == "GET" {
-		client_download(w, r)
+		if r.URL.Path == "/logout" {
+			logout(w, r)
+		} else if r.URL.Path == "/download" {
+			client_download(w, r)
+		}
 	}
 	/*
 		fmt.Println(r.FormValue("myinfo"))

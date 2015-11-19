@@ -37,25 +37,35 @@ func _client_download_success(w http.ResponseWriter, r *http.Request) {
 }
 
 func client_download(w http.ResponseWriter, r *http.Request) {
-	filename := r.URL.Path
-	// Retrieve token from request
 	r.ParseForm()
-	client_id := r.FormValue("token")
-	token_arr, ok := r.Form["token"]
-	if !ok {
+
+	var filename string
+	//Retrieve filename
+	if filename_arr, ok := r.Form["file"]; !ok {
+		fmt.Println("FAILED to get filename")
+		_client_upload_fail(w, r, "Invalid filename")
+		return
+	} else {
+		filename = filename_arr[0]
+	}
+
+	var token string
+	// Retrieve token
+	if token_arr, ok := r.Form["token"]; !ok {
 		fmt.Println("FAILED to get token")
 		_client_upload_fail(w, r, "Invalid Token")
 		return
+	} else {
+		token = token_arr[0]
 	}
-	token := token_arr[0]
 
 	// Verify token
-	client_id, ok = verify_token(token)
+	client_id, ok := verify_token(token)
 	if !ok {
 		fmt.Println("Invalid token")
 		_client_upload_fail(w, r, "Invalid Token")
 		return
 	}
-	fmt.Println("data/"+client_id+"-"+filename[1:])
-	http.ServeFile(w, r, "data/"+client_id+"-"+filename[1:])
+	fmt.Println("data/"+client_id+"-"+filename)
+	http.ServeFile(w, r, "data/"+client_id+"-"+filename)
 }
