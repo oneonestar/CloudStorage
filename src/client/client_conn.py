@@ -4,20 +4,88 @@ import log
 import json
 import requests
 
-url = "https://localhost:8080/"
-cert = "../server/config/server.pem"
-#url = "https://blog.onestar.moe:8080"
+base_url = None
+cert = None
+token = None
+
+def setup(server_url, selfcert=None):
+    global base_url
+    global cert
+    base_url = server_url
+    cert = selfcert
+
+def registration(username, password):
+    url = base_url + "registration"
+    payload = {
+            'client_id': username,
+            'client_secret': password
+    }
+    r = requests.post(url, data=payload, verify=cert)
+
+    # Parse result
+    try:
+        response = json.loads(r.text)
+    except Exception as e:
+        log.print_exception(e)
+        log.print_error("authentication failure", "failed to decode server message '%s'" % (r.text))
+        return False
+    if response.get("status"):
+        print("Create ac success")
+    else:
+        print("Create ac failed")
+
+
+def authenticate(username, password):
+    url = base_url + "login"
+    payload = {
+            'client_id': username,
+            'client_secret': password
+    }
+    # Request to server
+    # For real cert
+    # r = requests.get(url, data=data, verify=True)
+    # For self cert
+    r = requests.post(url, data=payload, verify=cert)
+
+    # Parse result
+    try:
+        response = json.loads(r.text)
+    except Exception as e:
+        log.print_exception(e)
+        log.print_error("authentication failure", "failed to decode server message '%s'" % (r.text))
+        return False
+    if response.get("status", False) and response.get("token", None) != None:
+        # Authentication success
+        global token
+        token = response.get("token")
+        print(token)
+        return True
+    else:
+        # Authentication failure
+        log.print_error("authentication failure", "wrong username or password")
+        return False
 
 def upload(filename_rand):
     """
     Upload the file to server.
     """
-    url2 = url+filename_rand
-    data = {'user':filename_rand}
+    url = base_url+"upload"
+    data = {'token': token}
     files = {'document': open(filename_rand, 'rb')}
     #r = requests.post(url, data=data, files=files, verify=True)
-    r = requests.post(url2, data=data, files=files, verify=cert)
+    r = requests.post(url, data=data, files=files, verify=cert)
     files['document'].close()
+    # Parse result
+    try:
+        response = json.loads(r.text)
+    except Exception as e:
+        log.print_exception(e)
+        log.print_error("authentication failure", "failed to decode server message '%s'" % (r.text))
+        return False
+    if response.get("status"):
+        print("Upload success")
+    else:
+        print("Upload failed")
 
 def upload_file(filename_ori):
     """
@@ -38,10 +106,10 @@ def upload_file(filename_ori):
     upload(data["filename_rand"])
 
 def download(filename_rand):
-    url2 = url+filename_rand
-    payload = {'user':filename_rand}
-    #r = requests.get(url2, data=data, verify=True)
-    r = requests.get(url2, verify=cert)
+    url = base_url+filename_rand
+    data = {'token': token}
+    #r = requests.get(url, data=data, verify=True)
+    r = requests.get(url, params=data, verify=cert)
     try:
         with open(filename_rand, "wb") as f:
             f.write(r.content)
