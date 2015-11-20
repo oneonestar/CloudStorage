@@ -230,7 +230,6 @@ def download(filename_rand, saveas=None):
         return False
     if r.content == b'404 page not found\n':
         return False
-    print("download", r.content)
     try:
         with open(saveas, "wb") as f:
             f.write(r.content)
