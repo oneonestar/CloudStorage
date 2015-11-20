@@ -10,13 +10,13 @@ import (
 )
 
 type response_upload struct {
-	Status bool `json:"status"`
+	Status  bool   `json:"status"`
 	Message string `json:"message"`
 }
 
 func _client_upload_fail(w http.ResponseWriter, r *http.Request, message string) {
-	ret := &response_upload {
-		Status: false,
+	ret := &response_upload{
+		Status:  false,
 		Message: message}
 	ret2, err := json.Marshal(ret)
 	if err != nil {
@@ -27,8 +27,8 @@ func _client_upload_fail(w http.ResponseWriter, r *http.Request, message string)
 }
 
 func _client_upload_success(w http.ResponseWriter, r *http.Request) {
-	ret := &response_upload {
-		Status: true,
+	ret := &response_upload{
+		Status:  true,
 		Message: "success"}
 	ret2, err := json.Marshal(ret)
 	if err != nil {
@@ -65,7 +65,7 @@ func client_upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer file.Close()
-	fmt.Println("Filename: "+handler.Filename)
+	fmt.Println("Filename: " + handler.Filename)
 	f, err := os.OpenFile("data/"+client_id+"-"+handler.Filename, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
 		fmt.Println(err)

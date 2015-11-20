@@ -6,13 +6,13 @@ import (
 	"net/http"
 )
 
-type response_download struct {
+type response_share struct {
 	Status  bool   `json:"status"`
 	Message string `json:"message"`
 }
 
 // Return a json message to client indicate the download failed
-func _client_download_fail(w http.ResponseWriter, r *http.Request, message string) {
+func _client_share_fail(w http.ResponseWriter, r *http.Request, message string) {
 	ret := &response_download{
 		Status:  false,
 		Message: message}
@@ -24,7 +24,7 @@ func _client_download_fail(w http.ResponseWriter, r *http.Request, message strin
 	fmt.Println("Response: ", string(ret2))
 }
 
-func client_download(w http.ResponseWriter, r *http.Request) {
+func client_share(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 
 	var filename string

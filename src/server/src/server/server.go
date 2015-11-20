@@ -1,17 +1,12 @@
 package main
 
 import (
-	//"encoding/json"
 	"fmt"
-	//"io/ioutil"
 	"net/http"
 )
 
+// Handle each http request, perform routing
 func handler(w http.ResponseWriter, r *http.Request) {
-	/*err := r.ParseMultipartForm(32 << 20)
-	if err != nil {
-		fmt.Println(err)
-	}*/
 	defer fmt.Println()
 	fmt.Println(r.RemoteAddr)
 	fmt.Println(r.Method, r.URL)
@@ -26,9 +21,13 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	} else if r.Method == "GET" {
 		if r.URL.Path == "/logout" {
 			logout(w, r)
+		} else if r.URL.Path == "/share" {
+			//client_get_list(w, r)
 		} else if r.URL.Path == "/download" {
 			client_download(w, r)
 		}
+	} else if r.Method == "DELETE" {
+		client_delete(w, r)
 	}
 	/*
 		fmt.Println(r.FormValue("myinfo"))

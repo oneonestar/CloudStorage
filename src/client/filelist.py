@@ -38,7 +38,17 @@ def append(filename_ori, filename_rand, key, iv, tag):
         "iv": iv,
         "tag": tag
     }
-    mylist[list_record['filename_ori']] = list_record
+    mylist[filename_ori] = list_record
+
+def delete(filename_ori):
+    global mylist
+    if filename_ori in mylist:
+        mylist.pop(filename_ori, None)
+    else:
+        print("File not in the list")
+
+def get(filename_ori):
+    return mylist.get(filename_ori)
 
 def encrypt_list(password, salt):
     """
@@ -69,6 +79,7 @@ def load(password, salt, filename="list"):
     Raise an exception when decryption failed.
     Tag unmatch will cause decryption fail.
     """
+    global mylist
     mylist = {}
     data = None
     try:
@@ -83,7 +94,10 @@ def load(password, salt, filename="list"):
     iv = data[:12]
     tag = data[12: 12+16]
     cipher = data[12+16:]
-    ret = decrypt_data(password, salt, iv, tag, cipher)
+    try:
+        ret = decrypt_data(password, salt, iv, tag, cipher)
+    except:
+        return False
     mylist = pickle.loads(ret)
 
 def encrypt_data(user_password, salt, data):

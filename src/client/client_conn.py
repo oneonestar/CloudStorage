@@ -7,6 +7,7 @@ import requests
 base_url = None
 cert = None
 token = None
+client_id = None
 
 ##################################################################
 # Initial setup, such as setting the server and certificates
@@ -20,13 +21,18 @@ def setup(server_url, selfcert=None):
 ##################################################################
 # Registrate a new account
 ##################################################################
-def registration(username, password):
+def registrate(username, password):
     url = base_url + "registration"
     payload = {
             'client_id': username,
             'client_secret': password
     }
-    r = requests.post(url, data=payload, verify=cert)
+    try:
+        r = requests.post(url, data=payload, verify=cert)
+    except Exception as e:
+        log.print_exception(e)
+        log.print_error("error", "connection failure")
+        return False
 
     # Parse result
     try:
@@ -36,9 +42,9 @@ def registration(username, password):
         log.print_error("authentication failure", "failed to decode server message '%s'" % (r.text))
         return False
     if response.get("status"):
-        print("Create ac success")
+        return True
     else:
-        print("Create ac failed")
+        return False
 
 
 ##################################################################
@@ -54,7 +60,12 @@ def authenticate(username, password):
     # For real cert
     # r = requests.get(url, data=data, verify=True)
     # For self cert
-    r = requests.post(url, data=payload, verify=cert)
+    try:
+        r = requests.post(url, data=payload, verify=cert)
+    except Exception as e:
+        log.print_exception(e)
+        log.print_error("error", "connection failure")
+        return False
 
     # Parse result
     try:
@@ -66,8 +77,9 @@ def authenticate(username, password):
     if response.get("status", False) and response.get("token", None) != None:
         # Authentication success
         global token
+        global client_id
         token = response.get("token")
-        print(token)
+        client_id = username
         return True
     else:
         # Authentication failure
@@ -78,10 +90,17 @@ def authenticate(username, password):
 # Logout
 ##################################################################
 def logout():
+    if token == None:
+        return False
     url = base_url + "logout"
     data = {"token": token}
     #r = requests.get(url, data=data, verify=True)
-    r = requests.get(url, params=data, verify=cert)
+    try:
+        r = requests.get(url, params=data, verify=cert)
+    except Exception as e:
+        log.print_exception(e)
+        log.print_error("error", "connection failure")
+        return False
     # Parse result
     try:
         response = json.loads(r.text)
@@ -90,12 +109,22 @@ def logout():
         log.print_error("logout failed", "failed to decode server message '%s'" % (r.text))
         return False
     if response.get("status", False):
+        global token
+        token = None
         # Logout successful
-        print("Logout successful")
+        return True
     else:
         # Logout failure
         log.print_error("logout failed", "failed to logout '%s'" % (r.text))
+        return False
 
+##################################################################
+# Is login
+##################################################################
+def is_login():
+    return token != None
+def username():
+    return client_id
 
 ##################################################################
 # Upload file
@@ -108,7 +137,12 @@ def upload(filename_rand):
     data = {'token': token}
     files = {'document': open(filename_rand, 'rb')}
     #r = requests.post(url, data=data, files=files, verify=True)
-    r = requests.post(url, data=data, files=files, verify=cert)
+    try:
+        r = requests.post(url, data=data, files=files, verify=cert)
+    except Exception as e:
+        log.print_exception(e)
+        log.print_error("error", "connection failure")
+        return False
     files['document'].close()
     # Parse result
     try:
@@ -118,9 +152,9 @@ def upload(filename_rand):
         log.print_error("authentication failure", "failed to decode server message '%s'" % (r.text))
         return False
     if response.get("status"):
-        print("Upload success")
+        return True
     else:
-        print("Upload failed")
+        return False
 
 def upload_file(filename_ori):
     """
@@ -132,28 +166,73 @@ def upload_file(filename_ori):
         data = encrypt.encrypt_file(filename_ori)
     except:
         log.print_error("error", "failed to encrypt file '%s'" % (filename_ori))
-        return
+        return False
 
     # Store the filename, key, iv and tag to list
     filelist.append(data["filename_ori"], data["filename_rand"], data["key"],
                     data["iv"], data["tag"])
     # Upload cipher text to server
-    upload(data["filename_rand"])
+    return upload(data["filename_rand"])
+
+##################################################################
+# Delete file
+##################################################################
+def delete(filename_rand):
+    """
+    Upload the file to server.
+    """
+    url = base_url
+    data = {
+        'token': token,
+        'file': filename_rand
+    }
+    try:
+        r = requests.delete(url, params=data, verify=cert)
+    except Exception as e:
+        log.print_exception(e)
+        log.print_error("error", "connection failure")
+        return False
+    # Parse result
+    try:
+        response = json.loads(r.text)
+    except Exception as e:
+        log.print_exception(e)
+        log.print_error("authentication failure", "failed to decode server message '%s'" % (r.text))
+        return False
+    if response.get("status"):
+        return True
+    else:
+        return False
+
 
 ##################################################################
 # Download file
 ##################################################################
-def download(filename_rand):
+def download(filename_rand, saveas=None):
+    '''
+    Download and save the file from server.
+    '''
+    if saveas == None:
+        saveas = filename_rand
     url = base_url+"download"
     data = {
         'token': token,
         'file': filename_rand
     }
     #r = requests.get(url, data=data, verify=True)
-    r = requests.get(url, params=data, verify=cert)
     try:
-        with open(filename_rand, "wb") as f:
+        r = requests.get(url, params=data, verify=cert)
+    except Exception as e:
+        log.print_exception(e)
+        log.print_error("error", "connection failure")
+        return False
+    if r.content == b'404 page not found\n':
+        return False
+    print("download", r.content)
+    try:
+        with open(saveas, "wb") as f:
             f.write(r.content)
+        return True
     except Exception as e:
         log.print_exception(e)
         log.print_error("IO error", "cannot open file '%s'" % (filename_rand))
@@ -172,7 +251,7 @@ def download_file(filename_ori, saveas=None):
         record = filelist.mylist[filename_ori]
     except:
         log.print_error("error", "file '%s' not in record" % (filename_ori))
-        return
+        return False
 
     r = download(record["filename_rand"])
 
@@ -187,7 +266,8 @@ def download_file(filename_ori, saveas=None):
                              record["key"], record["iv"], record["tag"])
     except:
         log.print_error("error", "failed to decrypt '%s'" % (filename_ori))
-        return
+        return False
+    return True
 
 if __name__ == "__main__":
     '''

@@ -2,8 +2,8 @@ package main
 
 import (
 	"bytes"
-	"encoding/hex"
 	"encoding/gob"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -19,13 +19,13 @@ type Response_authenticate struct {
 }
 
 type Response_create_account struct {
-	Status bool   `json:"status"`
+	Status bool `json:"status"`
 }
 
 // ===========================================
 // Account and hashed password db
 type record struct {
-	Salt []byte
+	Salt     []byte
 	Password []byte
 }
 
@@ -36,10 +36,9 @@ var db map[string]record
 type token struct {
 	Token []string
 }
+
 // [token] = client_id
 var token_db map[string]string
-
-
 
 func setup() {
 	db = make(map[string]record)
@@ -47,7 +46,7 @@ func setup() {
 }
 
 func _create_account_fail(w http.ResponseWriter, r *http.Request) {
-	ret := &Response_create_account {
+	ret := &Response_create_account{
 		Status: false}
 	ret2, err := json.Marshal(ret)
 	if err != nil {
@@ -82,7 +81,7 @@ func create_account(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Compute hash(pw|salt)
-	password, err:= scrypt.Key([]byte(client_pw), salt, 16384, 8, 1, 256)
+	password, err := scrypt.Key([]byte(client_pw), salt, 16384, 8, 1, 256)
 	if err != nil {
 		fmt.Println("ERROR")
 		_create_account_fail(w, r)
@@ -90,13 +89,13 @@ func create_account(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Store the record into db
-	db[client_id] = record {
-		Salt: salt,
+	db[client_id] = record{
+		Salt:     salt,
 		Password: password,
 	}
 
 	// Return true to client
-	ret := &Response_create_account {
+	ret := &Response_create_account{
 		Status: true}
 	ret2, err := json.Marshal(ret)
 	if err != nil {
@@ -144,7 +143,7 @@ func _authenticate(client_id string, client_pw string) bool {
 	}
 
 	// Compute hash(pw|salt)
-	password, err:= scrypt.Key([]byte(client_pw), record.Salt, 16384, 8, 1, 256)
+	password, err := scrypt.Key([]byte(client_pw), record.Salt, 16384, 8, 1, 256)
 	if err != nil {
 		fmt.Println("ERROR")
 		return false
@@ -231,7 +230,7 @@ func logout(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Logout: ", token)
 
 	delete(token_db, token)
-	ret := &Response_create_account {
+	ret := &Response_create_account{
 		Status: true}
 	ret2, err := json.Marshal(ret)
 	if err != nil {

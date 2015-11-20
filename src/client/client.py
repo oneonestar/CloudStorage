@@ -1,41 +1,183 @@
-import filelist
 import client_conn
+import filelist
+import getpass
+import signal
+import sys
 
+# filename of list
+mylist = "list"
+password = None
+
+
+def print_help():
+    print()
+    print()
+    if client_conn.is_login():
+        print("Login as: "+ client_conn.username())
+    print("Help:")
+    print("General:")
+    print("  c   create a new account")
+    print("  i   login")
+    print("  o   logout")
+    print("  p   print this menu")
+    print("  q   logout and quit")
+    print()
+    print("Files:")
+    print("  d   download file")
+    print("  l   list file")
+    print("  r   delete file")
+    print("  u   upload file")
+    print()
+
+def event_loop():
+    print()
+    print("Command (p for help): ", end="")
+    command = input()
+    command = command.strip()
+    # General
+    if command == "c":
+        ui_create_account()
+    elif command == "i":
+        ui_login()
+    elif command == "o":
+        ui_logout()
+    elif command == "p":
+        print_help()
+    elif command == "q":
+        exit_program()
+    # Files
+    elif command == "d":
+        ui_download()
+    elif command == "l":
+        ui_listfile()
+    elif command == "r":
+        ui_delete()
+    elif command == "u":
+        ui_upload()
+    # Unknown command
+    else:
+        print(command+": unknown command")
+
+def handler(signum, frame):
+    print("\nReceived signal: ", signum)
+    print("Exit")
+    exit_program()
+
+def exit_program():
+    if client_conn.is_login():
+        filelist.save(password, "salt", mylist)
+        client_conn.upload(mylist)
+        client_conn.logout()
+    print("Bye")
+    sys.exit()
+
+def ui_login():
+    # Connect to server
+    print("Username: ", end='')
+    username = input()
+    global password
+    password = getpass.getpass('Password: ')
+    status = client_conn.authenticate(username, password)
+    # Get filelist
+    if status:
+        print("Login success")
+    else:
+        print("Login failure")
+        return
+    status = client_conn.download(mylist)
+    if status:
+        # List exist on server and successfuly downloaded
+        filelist.load(password, "salt", mylist)
+    else:
+        # List not exist on server
+        pass
+
+def ui_logout():
+    status = client_conn.logout()
+    if status:
+        print("Logout success")
+    else:
+        print("Logout failure")
+
+def ui_create_account():
+    print("Username: ", end='')
+    global password
+    username = input()
+    password = getpass.getpass('Password: ')
+    status = client_conn.registrate(username, password)
+    if status:
+        print("Create account success")
+    else:
+        print("Create account failure")
+
+def ui_upload():
+    if not client_conn.is_login():
+        print("Please login first")
+        return
+    print("Filename: ", end='')
+    filename = input()
+    status = client_conn.upload_file(filename)
+    if status:
+        print("Upload success")
+    else:
+        print("Upload failure")
+    
+def ui_download():
+    if not client_conn.is_login():
+        print("Please login first")
+        return
+    print("Filename: ", end='')
+    filename = input()
+    print("Save as: ", end='')
+    saveas = input()
+    status = client_conn.download_file(filename, saveas)
+    if status:
+        print("Download success")
+    else:
+        print("Download failure")
+
+def ui_listfile():
+    if not client_conn.is_login():
+        print("Please login first")
+        return
+    filelist.listing()
+
+def ui_delete():
+    if not client_conn.is_login():
+        print("Please login first")
+        return
+    print("Filename: ", end='')
+    filename = input()
+    record = filelist.get(filename)
+    if record:
+        client_conn.delete(record['filename_rand'])
+    filelist.delete(filename)
 
 if __name__ == "__main__":
     '''
     For testing
     '''
-    mylist = "list"
+    signal.signal(signal.SIGINT, handler)
     password = "secure password"
     salt = "random salt"
 
     #url = "https://blog.onestar.moe:8080"
     client_conn.setup("http://localhost:8080/", "../server/config/server.pem")
-    client_conn.registration("STAR", "PW")
-    #client_conn.setup("https://localhost:8080/", "../server/config/server.pem")
-    #while True:
-        #username = input()
-        #password = input()
-    status = client_conn.authenticate("star", "PW")
-    status = client_conn.authenticate("STAR", "Pw")
-    status = client_conn.authenticate("STAR", "PW")
-     #   if status:
-            # login success
-     #       break
+
+    print("Welcome to ComfortZone - Secure Cloud Storage Service")
+    print()
+    print()
+    while True:
+        event_loop()
 
     # Upload a file
-    client_conn.upload_file("testing.txt")
     # List files
-    filelist.listing()
+    #filelist.listing()
     # Upload filelist
-    filelist.save(password, salt, mylist)
-    client_conn.upload(mylist)
     # Download filelist
-    client_conn.download(mylist)
     # Download a file
-    client_conn.download_file("testing.txt", "saveas.txt")
+    #client_conn.download_file("testing.txt", "saveas.txt")
 
     # Logout
-    client_conn.logout()
+    #client_conn.logout()
     #client_conn.download_file("testing.txt", "saveas.txt")
