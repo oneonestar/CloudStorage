@@ -90,6 +90,7 @@ def authenticate(username, password):
 # Logout
 ##################################################################
 def logout():
+    global token
     if token == None:
         return False
     url = base_url + "logout"
@@ -109,7 +110,6 @@ def logout():
         log.print_error("logout failed", "failed to decode server message '%s'" % (r.text))
         return False
     if response.get("status", False):
-        global token
         token = None
         # Logout successful
         return True

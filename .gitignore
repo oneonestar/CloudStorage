@@ -1,6 +1,9 @@
 *.data
 saveas.txt
 list
+*.swp
+golang.org/*
+pkg/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

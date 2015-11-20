@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
 )
 
 // Handle each http request, perform routing
@@ -43,6 +44,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	os.MkdirAll("data", 0755)
 	setup()
 	http.HandleFunc("/", handler)
 	//http.ListenAndServeTLS(":8080","config/server.pem", "config/server.key", nil)
