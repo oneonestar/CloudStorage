@@ -109,6 +109,7 @@ def logout():
         log.print_exception(e)
         log.print_error("logout failed", "failed to decode server message '%s'" % (r.text))
         return False
+
     if response.get("status", False):
         token = None
         # Logout successful
@@ -116,6 +117,7 @@ def logout():
     else:
         # Logout failure
         log.print_error("logout failed", "failed to logout '%s'" % (r.text))
+        print("d")
         return False
 
 ##################################################################

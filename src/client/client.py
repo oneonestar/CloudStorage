@@ -1,5 +1,6 @@
 import client_conn
 import filelist
+import hashlib
 import getpass
 import signal
 import sys
@@ -72,12 +73,17 @@ def exit_program():
     sys.exit()
 
 def ui_login():
+    if client_conn.is_login():
+        print("You already login")
+        return
     # Connect to server
     print("Username: ", end='')
     username = input()
     global password
     password = getpass.getpass('Password: ')
-    status = client_conn.authenticate(username, password)
+    pw_server = hashlib.sha256()
+    pw_server.update(password.encode('UTF-8'))
+    status = client_conn.authenticate(username, pw_server.digest())
     # Get filelist
     if status:
         print("Login success")
@@ -93,6 +99,9 @@ def ui_login():
         pass
 
 def ui_logout():
+    if client_conn.is_login():
+        filelist.save(password, "salt", mylist)
+        client_conn.upload(mylist)
     status = client_conn.logout()
     if status:
         print("Logout success")
@@ -104,7 +113,9 @@ def ui_create_account():
     global password
     username = input()
     password = getpass.getpass('Password: ')
-    status = client_conn.registrate(username, password)
+    pw_server = hashlib.sha256()
+    pw_server.update(password.encode('UTF-8'))
+    status = client_conn.registrate(username, pw_server.digest())
     if status:
         print("Create account success")
     else:
@@ -113,7 +124,7 @@ def ui_create_account():
 def ui_upload():
     if not client_conn.is_login():
         print("Please login first")
-        return
+        #return
     print("Filename: ", end='')
     filename = input()
     status = client_conn.upload_file(filename)
@@ -158,8 +169,6 @@ if __name__ == "__main__":
     For testing
     '''
     signal.signal(signal.SIGINT, handler)
-    password = "secure password"
-    salt = "random salt"
 
     #url = "https://blog.onestar.moe:8080"
     client_conn.setup("http://localhost:8080/", "../server/config/server.pem")

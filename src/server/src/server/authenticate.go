@@ -41,7 +41,9 @@ type token struct {
 var token_db map[string]string
 
 func setup() {
-	db = make(map[string]record)
+	if db == nil {
+		db = make(map[string]record)
+	}
 	token_db = make(map[string]string)
 }
 
@@ -105,7 +107,8 @@ func create_account(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Response: ", string(ret2))
 }
 
-func save(filename string) {
+func save_db() {
+	filename := "db"
 	f, err := os.Create(filename)
 	if err != nil {
 		panic("cant open file")
@@ -118,10 +121,12 @@ func save(filename string) {
 	}
 }
 
-func load(filename string) {
+func load_db() {
+	filename := "db"
 	f, err := os.Open(filename)
 	if err != nil {
-		panic("cant open file")
+		fmt.Println("Cannot load db file")
+		return
 	}
 	defer f.Close()
 
