@@ -2,6 +2,7 @@
 Encryption module using AES-256-GCM
 """
 
+import json
 import os
 import uuid
 from cryptography import exceptions

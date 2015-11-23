@@ -1,7 +1,9 @@
 import client_conn
 import filelist
+import rsa
 import hashlib
 import getpass
+import log
 import signal
 import sys
 
@@ -27,14 +29,14 @@ def print_help():
     print("  d   download file")
     print("  l   list file")
     print("  r   delete file")
+    print("  s   share file")
     print("  u   upload file")
     print()
 
 def event_loop():
     print()
     print("Command (p for help): ", end="")
-    command = input()
-    command = command.strip()
+    command = input().strip()
     # General
     if command == "c":
         ui_create_account()
@@ -53,6 +55,8 @@ def event_loop():
         ui_listfile()
     elif command == "r":
         ui_delete()
+    elif command == "s":
+        ui_share()
     elif command == "u":
         ui_upload()
     # Unknown command
@@ -132,7 +136,7 @@ def ui_upload():
         print("Upload success")
     else:
         print("Upload failure")
-    
+
 def ui_download():
     if not client_conn.is_login():
         print("Please login first")
@@ -146,6 +150,42 @@ def ui_download():
         print("Download success")
     else:
         print("Download failure")
+
+def ui_share():
+    if not client_conn.is_login():
+        print("Please login first")
+        return
+    # Enter target username
+    print("Invite people (username): ", end='')
+    target = input().strip()
+
+    # Get target's public key
+    choice = None
+    while choice != "1" and choice != "2":
+        print("Obtain the public key:")
+        print(" 1) Download from Hong Kong Post")
+        print(" 2) Input from file")
+        print("Choice [1,2]: ", end='')
+        choice = input().strip()
+
+    key = None
+    try:
+        if choice == "1":
+            # Download from HK Post
+            print("Email address: ", end='')
+            email = input().strip()
+            key = rsa.get_cert(email)
+        if choice == "2":
+            # Import from file
+            print("Public key file: ", end='')
+            filename = input().strip()
+            key = rsa.get_cert_from_file(filename)
+
+    except Exception as e:
+        log.print_exception(e)
+        log.print_error("error", "failed to load cert")
+        return 
+
 
 def ui_listfile():
     if not client_conn.is_login():

@@ -31,3 +31,16 @@ go get golang.org/x/crypto/scrypt
 python client.py
 go run server.go
 ```
+
+# Testing
+## RSA (E-cert)
+Convert e-cert .p12 file to pem
+```
+openssl pkcs12 -in path.p12 -out newfile.crt.pem -clcerts -nokeys
+openssl pkcs12 -in path.p12 -out newfile.key.pem -nocerts -nodes
+```
+
+Decrypt
+```
+openssl rsautl -in enc -inkey me.key.pem -decrypt -oaep -hexdump
+```
