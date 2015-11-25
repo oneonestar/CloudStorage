@@ -7,6 +7,10 @@ import pyscrypt
 import binascii
 import pickle
 import os
+import bson
+import rsa
+import encrypt
+import base64
 
 # Internal modules
 import encrypt
@@ -15,12 +19,19 @@ __all__ = ["append", "save", "load", "listing"]
 
 # filename_ori is the key.
 mylist = {}
+mylist_share = {}
 
 def listing():
     """
     Display the records in filelist.
     """
     for i, k in mylist.items():
+        print()
+        print(i)
+        import pprint
+        pp = pprint.PrettyPrinter(indent=4)
+        pp.pprint(k)
+    for i, k in mylist_share.items():
         print()
         print(i)
         import pprint
@@ -36,9 +47,82 @@ def append(filename_ori, filename_rand, key, iv, tag):
         "filename_rand": filename_rand,
         "key": key,
         "iv": iv,
-        "tag": tag
+        "tag": tag,
     }
     mylist[filename_ori] = list_record
+
+def append_share(filename_ori, filename_rand, key, iv, tag, shared_by):
+    """
+    Append a new record into the list. filename_ori is the key.
+    """
+    list_record = {
+        "filename_ori": filename_ori,
+        "filename_rand": filename_rand,
+        "key": key,
+        "iv": iv,
+        "tag": tag,
+        "shared_by": shared_by
+    }
+    mylist_share[filename_ori] = list_record
+
+def export_record(filename_ori, sender, recipient, public_key, private_key):
+    """
+    Query a record, return a encrypted and signed BSON record
+
+    public_key is the recipient's public key
+    private_key is the sender's private key (i'm the sender)
+    """
+    if filename_ori not in mylist:
+        return None
+    # Prepare the record
+    record = {}
+    record = mylist[filename_ori]
+    record["sender"] = sender
+    record["recipient"] = recipient
+    record_bson = bson.BSON.encode(record)
+
+    # Sign and encrypt the record
+    signature = rsa.sign_rsa(record_bson, private_key)
+    final_record = {}
+    final_record["signature"] = signature
+    final_record["record"] = record_bson
+    final_record_bson = bson.BSON.encode(final_record)
+
+    # Use AES encrypt the record, use rsa to encrypt the symmetric key
+    ret = encrypt.encrypt_rand(final_record_bson)
+    ret_bin =  b''.join([ret["key"], ret["iv"], ret["tag"]])
+    encrypted_final_record = rsa.encrypt_rsa(ret_bin, public_key)
+
+    final = {
+        "key": ret_bin,
+        "record": ret["cipher"]
+    }
+    return base64.b64encode(bson.BSON.encode(final))
+
+def import_record(record, public_key, private_key):
+    """
+    Import an encrypted and signed BSON record
+
+    public_key is the sender's public key
+    private_key is the recipient's private key (i'm the recipient)
+    """
+    try:
+        final = bson.BSON.decode(base64.b64decode(record))
+        ret_bin = final['key']
+        key = ret_bin[:32]
+        iv = ret_bin[32:32+12]
+        tag = ret_bin[32+12: 32+12+16]
+        final_record_bson = encrypt.decrypt(key, iv, tag, final['record'])
+
+        final_record = bson.BSON.decode(final_record_bson)
+        if not rsa.verify_rsa(final_record["record"],
+                      final_record["signature"], public_key):
+            raise Exception('signature not match')
+        record = bson.BSON.decode(final_record["record"])
+        return record
+    except:
+        print("Import record failed")
+        raise
 
 def delete(filename_ori):
     global mylist
@@ -128,3 +212,12 @@ if __name__ == "__main__":
     save("Password1", "salt1")
     load("Password1", "salt1")
     print(mylist)
+
+    # Test sharing record
+    public_key = rsa.get_cert("oneonestar@gmail.com")
+    private_key = rsa.load_private_cert_from_file("/home/star/.ssh/me.key.pem2")
+    append("file1", "file-UUID", b'key', b'iv', b'tag')
+    print(mylist)
+    record = export_record("file1", "alice", "bob", public_key, private_key)
+    print("record:", record)
+    import_record(record, public_key, private_key)

@@ -40,7 +40,7 @@ type token struct {
 // [token] = client_id
 var token_db map[string]string
 
-func setup() {
+func auth_setup() {
 	if db == nil {
 		db = make(map[string]record)
 	}
@@ -107,7 +107,7 @@ func create_account(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Response: ", string(ret2))
 }
 
-func save_db() {
+func auth_save_db() {
 	filename := "db"
 	f, err := os.Create(filename)
 	if err != nil {
@@ -121,7 +121,7 @@ func save_db() {
 	}
 }
 
-func load_db() {
+func auth_load_db() {
 	filename := "db"
 	f, err := os.Open(filename)
 	if err != nil {

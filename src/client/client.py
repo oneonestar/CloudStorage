@@ -94,6 +94,7 @@ def ui_login():
     else:
         print("Login failure")
         return
+    # Download the filelist
     status = client_conn.download(mylist)
     if status:
         # List exist on server and successfuly downloaded
@@ -155,42 +156,59 @@ def ui_share():
     if not client_conn.is_login():
         print("Please login first")
         return
-    # Enter target username
+    # Enter recipient username
     print("Invite people (username): ", end='')
-    target = input().strip()
+    recipient = input().strip()
+    # Recipient's email
+    recv_email = None
+    print("Recipient's email address: ", end='')
+    recv_email = input().strip()
 
     # Get target's public key
     choice = None
     while choice != "1" and choice != "2":
-        print("Obtain the public key:")
+        print("Obtain the recipent's public key:")
         print(" 1) Download from Hong Kong Post")
         print(" 2) Input from file")
         print("Choice [1,2]: ", end='')
         choice = input().strip()
-
-    key = None
+    public_key = None
     try:
         if choice == "1":
             # Download from HK Post
-            print("Email address: ", end='')
-            email = input().strip()
-            key = rsa.get_cert(email)
+            public_key = rsa.get_cert(recv_email)
         if choice == "2":
             # Import from file
             print("Public key file: ", end='')
             filename = input().strip()
-            key = rsa.get_cert_from_file(filename)
-
+            public_key = rsa.get_cert_from_file(filename)
     except Exception as e:
         log.print_exception(e)
         log.print_error("error", "failed to load cert")
         return 
+
+    # Get user's private key to signoff
+    private_key = rsa.load_private_cert_from_file("/home/star/.ssh/me.key.pem2")
+
+    # Encrypt the filelist record
+    print("File to share: ", end='')
+    filename = input()
+    sender = "oneonestar@gmail.com"
+    record = filelist.export_record(filename, sender, recv_email, public_key, private_key)
+    if record == None:
+        print("Failed to share file")
+        return
+    # Send to server
+    client_conn.share(recipient, record)
 
 
 def ui_listfile():
     if not client_conn.is_login():
         print("Please login first")
         return
+    # Get share files
+    client_conn.get_share()
+    # Listing
     filelist.listing()
 
 def ui_delete():

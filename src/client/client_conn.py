@@ -3,6 +3,7 @@ import filelist
 import log
 import json
 import requests
+import rsa
 
 base_url = None
 cert = None
@@ -269,6 +270,85 @@ def download_file(filename_ori, saveas=None):
         log.print_error("error", "failed to decrypt '%s'" % (filename_ori))
         return False
     return True
+
+##################################################################
+# Share file
+##################################################################
+def share(recipient, data):
+    """
+    Upload the file to server.
+    """
+    url = base_url+"share"
+    print(token)
+    print(recipient)
+    print(data)
+    data = {
+        'token': token,
+        'recipient': recipient,
+        'data': data
+    }
+    try:
+        r = requests.post(url, data=data, verify=cert)
+    except Exception as e:
+        log.print_exception(e)
+        log.print_error("error", "connection failure")
+        return False
+    # Parse result
+    try:
+        response = json.loads(r.text)
+        print(response)
+    except Exception as e:
+        log.print_exception(e)
+        log.print_error("authentication failure", "failed to decode server message '%s'" % (r.text))
+        return False
+    if response.get("status"):
+        return True
+    else:
+        return False
+
+##################################################################
+# Get share file
+##################################################################
+def get_share():
+    """
+    Upload the file to server.
+    """
+    url = base_url+"listshare"
+    data = {
+        'token': token,
+    }
+    data = {"token": token}
+    try:
+        r = requests.get(url, params=data, verify=cert)
+    except Exception as e:
+        log.print_exception(e)
+        log.print_error("error", "connection failure")
+        return False
+    # Parse result
+    try:
+        response = json.loads(r.text)
+        print(response)
+    except Exception as e:
+        log.print_exception(e)
+        log.print_error("authentication failure", "failed to decode server message '%s'" % (r.text))
+        return False
+    if not response.get("status"):
+        return False
+    if response["records"] == None:
+        return False
+    for i in response["records"]:
+        sender = i['Sender']
+        record = i['Record']
+        print("Sender:",sender)
+        print("Record:",record)
+        recv_email = "oneonestar@gmail.com"
+        public_key = rsa.get_cert(recv_email)
+        private_key = rsa.load_private_cert_from_file("/home/star/.ssh/me.key.pem2")
+        share = filelist.import_record(record, public_key, private_key)
+        print(share)
+        if share != None:
+            filelist.append_share(share['filename_ori'], share['filename_rand'],
+                        share['key'], share['iv'], share['tag'], sender)
 
 if __name__ == "__main__":
     '''

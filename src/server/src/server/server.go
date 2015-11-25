@@ -20,12 +20,14 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			create_account(w, r)
 		} else if r.URL.Path == "/upload" {
 			client_upload(w, r)
+		} else if r.URL.Path == "/share" {
+			client_share(w, r)
 		}
 	} else if r.Method == "GET" {
 		if r.URL.Path == "/logout" {
 			logout(w, r)
-		} else if r.URL.Path == "/share" {
-			//client_get_list(w, r)
+		} else if r.URL.Path == "/listshare" {
+			client_share_list(w, r)
 		} else if r.URL.Path == "/download" {
 			client_download(w, r)
 		}
@@ -46,7 +48,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func cleanup() {
-	save_db()
+	auth_save_db()
+	share_save_db()
 	fmt.Println("Bye")
 }
 
@@ -61,8 +64,10 @@ func main() {
 	}()
 
 	os.MkdirAll("data", 0755)
-	load_db()
-	setup()
+	auth_load_db()
+	share_load_db()
+	auth_setup()
+	share_setup()
 	http.HandleFunc("/", handler)
 	//http.ListenAndServeTLS(":8080","config/server.pem", "config/server.key", nil)
 	http.ListenAndServe(":8080", nil)
