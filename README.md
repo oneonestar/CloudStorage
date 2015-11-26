@@ -4,25 +4,34 @@ Secure Cloud Storage System
 ## Install
 ### Debian / Ubuntu
 ```
-sudo apt-get install python3-dev libffi-dev python3-pip libffi-dev libssl-dev
+sudo apt-get install python3-dev libffi-dev python3-pip libffi-dev libssl-dev python3-bson
 sudo pip3 install cffi --upgrade
-sudo pip3 install cryptography ldap3 bson
+sudo pip3 install cryptography ldap3
 sudo pip3 install https://github.com/ricmoo/pyscrypt/archive/master.zip
 sudo apt-get install golang
 ```
 
 ### GO
 ```
-cd server
+cd src/server
 export GOPATH=`pwd`
 go get golang.org/x/crypto/scrypt
 ```
 
 ## Execute
+### Server side
 ```
-python client.py
-go run server.go
+cd src/server
+./run.sh
 ```
+
+### Client side
+```
+cd src/client
+./run.sh
+```
+
+
 
 # Testing
 ## RSA (E-cert)
