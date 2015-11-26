@@ -211,7 +211,7 @@ def delete(filename_rand):
 ##################################################################
 # Download file
 ##################################################################
-def download(filename_rand, saveas=None):
+def download(filename_rand, saveas=None, shared_by=None):
     '''
     Download and save the file from server.
     '''
@@ -222,6 +222,8 @@ def download(filename_rand, saveas=None):
         'token': token,
         'file': filename_rand
     }
+    if shared_by != None:
+        data['shared_by'] = shared_by
     #r = requests.get(url, data=data, verify=True)
     try:
         r = requests.get(url, params=data, verify=cert)
@@ -249,13 +251,15 @@ def download_file(filename_ori, saveas=None):
 
     # Get the key, iv and tag from list
     record = None
-    try:
+    if filename_ori in filelist.mylist:
         record = filelist.mylist[filename_ori]
-    except:
+        r = download(record["filename_rand"])
+    elif filename_ori in filelist.mylist_share:
+        record = filelist.mylist_share[filename_ori]
+        r = download(record["filename_rand"], record["shared_by"])
+    else:
         log.print_error("error", "file '%s' not in record" % (filename_ori))
         return False
-
-    r = download(record["filename_rand"])
 
     if saveas == None:
         outputfile = filename_ori

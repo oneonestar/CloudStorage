@@ -4,6 +4,7 @@ import rsa
 import hashlib
 import getpass
 import log
+import os
 import signal
 import sys
 
@@ -13,6 +14,9 @@ password = None
 
 
 def print_help():
+    """
+    Print the available command list.
+    """
     print()
     print()
     if client_conn.is_login():
@@ -34,6 +38,10 @@ def print_help():
     print()
 
 def event_loop():
+    """
+    Main input event loop.
+    """
+    # Get input
     print()
     print("Command (p for help): ", end="")
     command = input().strip()
@@ -64,11 +72,18 @@ def event_loop():
         print(command+": unknown command")
 
 def handler(signum, frame):
+    """
+    Signal handler handling Ctrl+C event.
+    """
     print("\nReceived signal: ", signum)
     print("Exit")
     exit_program()
 
 def exit_program():
+    """
+    Save the list before exit the program.
+    """
+    os.system("rm -f *.data")
     if client_conn.is_login():
         filelist.save(password, "salt", mylist)
         client_conn.upload(mylist)
@@ -77,6 +92,9 @@ def exit_program():
     sys.exit()
 
 def ui_login():
+    """
+    Handle authentication steps during user login.
+    """
     if client_conn.is_login():
         print("You already login")
         return
@@ -104,16 +122,23 @@ def ui_login():
         pass
 
 def ui_logout():
+    """
+    Handle the logout events.
+    """
     if client_conn.is_login():
         filelist.save(password, "salt", mylist)
         client_conn.upload(mylist)
     status = client_conn.logout()
+    filelist.mylist = {}
     if status:
         print("Logout success")
     else:
         print("Logout failure")
 
 def ui_create_account():
+    """
+    Create an new account.
+    """
     print("Username: ", end='')
     global password
     username = input()
@@ -127,6 +152,9 @@ def ui_create_account():
         print("Create account failure")
 
 def ui_upload():
+    """
+    Encrypte the file and upload.
+    """
     if not client_conn.is_login():
         print("Please login first")
         #return
@@ -176,7 +204,7 @@ def ui_share():
     try:
         if choice == "1":
             # Download from HK Post
-            public_key = rsa.get_cert(recv_email)
+            public_key = rsa.get_cert(recv_email, True)
         if choice == "2":
             # Import from file
             print("Public key file: ", end='')

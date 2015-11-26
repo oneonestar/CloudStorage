@@ -1,3 +1,6 @@
+"""
+Load RSA keys for encryption/decryption/sign/verify.
+"""
 from ldap3 import *
 import json
 import base64
@@ -9,33 +12,36 @@ from cryptography.hazmat.primitives.serialization import load_der_public_key, lo
 from cryptography.hazmat.primitives import hashes
 
 def get_cert(email, dump=False):
-    '''
+    """
     Get E-cert from HKPost LDAP server
-    '''
+    """
     # Connect to server
     server = Server('ldap1.hongkongpost.gov.hk', get_info=ALL)
     conn = Connection(server, auto_bind=True)
     conn.start_tls()
     # Get RSA cert
     conn.search('o=hongkong post e-cert (personal),c=hk', '(sn='+email+'*)')
-    conn.entries[0]
     a = json.loads(conn.entries[-1].entry_to_json())['dn']
     OU = a[a.find('OU=')+3:a.find('OU=')+13]
-    conn.search('EMAIL='+email+',OU='+str(OU)+',o=hongkong post e-cert (personal),c=hk', '(objectclass=*)', search_scope=LEVEL, dereference_aliases=DEREF_BASE, attributes=[ALL_ATTRIBUTES, ALL_OPERATIONAL_ATTRIBUTES])
+    conn.search('EMAIL='+email+',OU='+str(OU)+
+                ',o=hongkong post e-cert (personal),c=hk',
+                '(objectclass=*)', search_scope=LEVEL,
+                dereference_aliases=DEREF_BASE,
+                attributes=[ALL_ATTRIBUTES, ALL_OPERATIONAL_ATTRIBUTES])
     cert = conn.entries[0].entry_get_raw_attribute("userCertificate;binary")[0]
     # Cert info
     if dump:
         print(conn.entries[0].entry_get_dn())
         print(base64.b64encode(cert))
-    # get x509 der public 
+    # get x509 der public
     pub_key = x509.load_der_x509_certificate(cert, default_backend()).public_key()
     return pub_key
 
 from cryptography.hazmat.primitives import serialization
 def load_pub_cert_from_file(filename):
-    '''
+    """
     Load pem public key from file
-    '''
+    """
     try:
         with open(filename, "rb") as key_file:
             public_key = serialization.load_pem_public_key(

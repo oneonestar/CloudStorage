@@ -37,6 +37,13 @@ func client_download(w http.ResponseWriter, r *http.Request) {
 		filename = filename_arr[0]
 	}
 
+	var shared_by string
+	if shared_by_arr, ok := r.Form["shared_by"]; ok{
+		shared_by = shared_by_arr[0]
+	} else {
+		shared_by = ""
+	}
+
 	var token string
 	// Retrieve token
 	if token_arr, ok := r.Form["token"]; !ok {
@@ -54,6 +61,11 @@ func client_download(w http.ResponseWriter, r *http.Request) {
 		_client_upload_fail(w, r, "Invalid Token")
 		return
 	}
-	fmt.Println("data/" + client_id + "-" + filename)
-	http.ServeFile(w, r, "data/"+client_id+"-"+filename)
+	if shared_by == "" {
+		fmt.Println("data/" + client_id + "-" + filename)
+		http.ServeFile(w, r, "data/"+client_id+"-"+filename)
+	} else {
+		fmt.Println("data/" + shared_by + "-" + filename)
+		http.ServeFile(w, r, "data/"+shared_by+"-"+filename)
+	}
 }

@@ -11,6 +11,7 @@ import bson
 import rsa
 import encrypt
 import base64
+import copy
 
 # Internal modules
 import encrypt
@@ -76,7 +77,7 @@ def export_record(filename_ori, sender, recipient, public_key, private_key):
         return None
     # Prepare the record
     record = {}
-    record = mylist[filename_ori]
+    record = copy.deepcopy(mylist)[filename_ori]
     record["sender"] = sender
     record["recipient"] = recipient
     record_bson = bson.BSON.encode(record)
