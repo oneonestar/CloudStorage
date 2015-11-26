@@ -2,6 +2,7 @@
 saveas.txt
 list
 *.swp
+src/server/src/golang.org
 golang.org/*
 pkg/*
 data/*
