@@ -5,6 +5,7 @@ list
 src/server/src/golang.org
 golang.org/*
 pkg/*
+pkg
 data/*
 db
 
