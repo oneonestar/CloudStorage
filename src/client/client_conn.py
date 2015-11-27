@@ -3,6 +3,7 @@ import filelist
 import log
 import json
 import requests
+import os
 import rsa
 
 base_url = None
@@ -345,14 +346,23 @@ def get_share():
         record = i['Record']
         print("Sender:",sender)
         print("Record:",record)
-        recv_email = "oneonestar@gmail.com"
-        public_key = rsa.get_cert(recv_email)
-        private_key = rsa.load_private_cert_from_file("/home/star/.ssh/me.key.pem2")
-        share = filelist.import_record(record, public_key, private_key)
-        print(share)
-        if share != None:
-            filelist.append_share(share['filename_ori'], share['filename_rand'],
-                        share['key'], share['iv'], share['tag'], sender)
+        try:
+            if os.path.isfile("/home/star/.ssh/me.key.pem2"):
+                public_key = rsa.get_cert("oneonestar@gmail.com")
+            else:
+                public_key = rsa.load_public_cert_from_file("key/public_key.pem")
+            if os.path.isfile("/home/star/.ssh/me.key.pem2"):
+                private_key = rsa.load_private_cert_from_file("/home/star/.ssh/me.key.pem2")
+            else:
+                private_key = rsa.load_private_cert_from_file("key/private_key.pem")
+            share = filelist.import_record(record, public_key, private_key)
+            print(share)
+            if share != None:
+                filelist.append_share(share['filename_ori'], share['filename_rand'],
+                            share['key'], share['iv'], share['tag'], sender)
+        except:
+            print("Failed to decrypt message")
+            pass
 
 if __name__ == "__main__":
     '''

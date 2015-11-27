@@ -197,7 +197,7 @@ def ui_share():
     while choice != "1" and choice != "2":
         print("Obtain the recipent's public key:")
         print(" 1) Download from Hong Kong Post")
-        print(" 2) Input from file")
+        print(" 2) Input from file (debug)")
         print("Choice [1,2]: ", end='')
         choice = input().strip()
     public_key = None
@@ -205,23 +205,26 @@ def ui_share():
         if choice == "1":
             # Download from HK Post
             public_key = rsa.get_cert(recv_email, True)
+            sender = "oneonestar@gmail.com"
         if choice == "2":
             # Import from file
-            print("Public key file: ", end='')
-            filename = input().strip()
-            public_key = rsa.get_cert_from_file(filename)
+            sender = "debug@mail.com"
+            filename = "key/public_key.pem"
+            public_key = rsa.load_public_cert_from_file(filename)
     except Exception as e:
         log.print_exception(e)
         log.print_error("error", "failed to load cert")
         return 
 
     # Get user's private key to signoff
-    private_key = rsa.load_private_cert_from_file("/home/star/.ssh/me.key.pem2")
+    if os.path.isfile("/home/star/.ssh/me.key.pem2"):
+        private_key = rsa.load_private_cert_from_file("/home/star/.ssh/me.key.pem2")
+    else:
+        private_key = rsa.load_private_cert_from_file("key/private_key.pem")
 
     # Encrypt the filelist record
     print("File to share: ", end='')
     filename = input()
-    sender = "oneonestar@gmail.com"
     record = filelist.export_record(filename, sender, recv_email, public_key, private_key)
     if record == None:
         print("Failed to share file")

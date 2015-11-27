@@ -38,7 +38,7 @@ def get_cert(email, dump=False):
     return pub_key
 
 from cryptography.hazmat.primitives import serialization
-def load_pub_cert_from_file(filename):
+def load_public_cert_from_file(filename):
     """
     Load pem public key from file
     """
@@ -48,6 +48,7 @@ def load_pub_cert_from_file(filename):
                     key_file.read(),
                     backend=default_backend()
             )
+            return public_key
     except Exception as e:
         log.print_exception(e)
         log.print_error("error", "failed to open file '%s'" % (r.text))

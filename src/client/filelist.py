@@ -95,7 +95,7 @@ def export_record(filename_ori, sender, recipient, public_key, private_key):
     encrypted_final_record = rsa.encrypt_rsa(ret_bin, public_key)
 
     final = {
-        "key": ret_bin,
+        "key": encrypted_final_record,
         "record": ret["cipher"]
     }
     return base64.b64encode(bson.BSON.encode(final))
@@ -110,14 +110,15 @@ def import_record(record, public_key, private_key):
     try:
         final = bson.BSON.decode(base64.b64decode(record))
         ret_bin = final['key']
+        ret_bin = rsa.decrypt_rsa(ret_bin, private_key)
         key = ret_bin[:32]
         iv = ret_bin[32:32+12]
         tag = ret_bin[32+12: 32+12+16]
         final_record_bson = encrypt.decrypt(key, iv, tag, final['record'])
-
         final_record = bson.BSON.decode(final_record_bson)
         if not rsa.verify_rsa(final_record["record"],
                       final_record["signature"], public_key):
+            print("Signature not match")
             raise Exception('signature not match')
         record = bson.BSON.decode(final_record["record"])
         return record
@@ -216,7 +217,10 @@ if __name__ == "__main__":
 
     # Test sharing record
     public_key = rsa.get_cert("oneonestar@gmail.com")
-    private_key = rsa.load_private_cert_from_file("/home/star/.ssh/me.key.pem2")
+    if os.path.isfile("/home/star/.ssh/me.key.pem2"):
+        private_key = rsa.load_private_cert_from_file("/home/star/.ssh/me.key.pem2")
+    else:
+        private_key = rsa.load_private_cert_from_file("key/private_key.pem")
     append("file1", "file-UUID", b'key', b'iv', b'tag')
     print(mylist)
     record = export_record("file1", "alice", "bob", public_key, private_key)
